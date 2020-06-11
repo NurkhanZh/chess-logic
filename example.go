@@ -62,6 +62,15 @@ func isEmpty(x int, y int, board []Board, c chan bool, p chan Board) {
 	c <-true
 }
 
+func isEmptyOnRoad(x int, y int, board []Board) bool{
+	for _, b := range board{
+		if b.X == x && b.Y == y{
+			return false
+		}
+	}
+	return true
+}
+
 func checkPawnMoves(move *Move, piece *Board, board []Board, gameType int) bool {
 	fmt.Println("in pawn moves")
 	var x = move.X1
@@ -143,11 +152,38 @@ func checkKnightMoves(move *Move, piece *Board, board []Board) bool {
 func checkRookMoves(move *Move, piece *Board, board []Board) bool {
 	var c = make(chan bool)
 	var p = make(chan Board)
+	var x = move.X1
+	var y = move.Y1
 	go isEmpty(move.X2, move.Y2, board, c, p)
+	var dif = 0
+	if move.X2 == move.X1{
+		dif = int(math.Abs(float64(move.Y2 - move.Y1))) // difference
+	}else {
+		dif = int(math.Abs(float64(move.X1 - move.X2)))
+	}
+	for i := 0; i < dif-1; i++ {
+		if move.X2 == move.X1{
+			if move.Y1 > move.Y2{
+				y = y - 1
+			}else {
+				y = y + 1
+			}
+		}else {
+			if move.X1 > move.X2{
+				x = x - 1
+			}else {
+				x = x + 1
+			}
+		}
+		if !(isEmptyOnRoad(x, y, board)) {
+			return false
+		}
+	}
 	if <-c{
 		return true
 	}else {
 		var result = <-p
+		fmt.Println(piece.Color)
 		if piece.Color != result.Color{
 			return true
 		}
@@ -159,6 +195,51 @@ func checkQueenMoves(move *Move, piece *Board, board []Board) bool {
 	var c = make(chan bool)
 	var p = make(chan Board)
 	go isEmpty(move.X2, move.Y2, board, c, p)
+	var x = move.X1
+	var y = move.Y1
+	var dif = 0
+	if move.X2 == move.X1 || move.Y1 == move.Y2{
+		if move.X2 == move.X1{
+			dif = int(math.Abs(float64(move.Y2 - move.Y1))) // difference
+		}else {
+			dif = int(math.Abs(float64(move.X1 - move.X2)))
+		}
+		for i := 0; i < dif-1; i++ {
+			if move.X2 == move.X1{
+				if move.Y1 > move.Y2{
+					y = y - 1
+				}else {
+					y = y + 1
+				}
+			}else {
+				if move.X1 > move.X2{
+					x = x - 1
+				}else {
+					x = x + 1
+				}
+			}
+			if !(isEmptyOnRoad(x, y, board)) {
+				return false
+			}
+		}
+	}else {
+		dif = int(math.Abs(float64(move.X1 - move.X2)))
+		for i := 0; i < dif-1; i++{
+			if move.X1 < move.X2{
+				x = x + 1
+			}else {
+				x = x - 1
+			}
+			if move.Y2 > move.Y1{
+				y = y + 1
+			}else {
+				y = y - 1
+			}
+			if !(isEmptyOnRoad(x, y, board)){
+				return false
+			}
+		}
+	}
 	if <-c{
 		return true
 	}else {
@@ -174,6 +255,24 @@ func checkBishopMoves(move *Move, piece *Board, board []Board) bool  {
 	var c = make(chan bool)
 	var p = make(chan Board)
 	go isEmpty(move.X2, move.Y2, board, c, p)
+	var dif = int(math.Abs(float64(move.X1 - move.X2)))
+	var x = move.X1
+	var y = move.Y1
+	for i := 0; i < dif-1; i++{
+		if move.X1 < move.X2{
+			x = x + 1
+		}else {
+			x = x - 1
+		}
+		if move.Y2 > move.Y1{
+			y = y + 1
+		}else {
+			y = y - 1
+		}
+		if !(isEmptyOnRoad(x, y, board)){
+			return false
+		}
+	}
 	if <-c{
 		return true
 	}else {
